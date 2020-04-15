@@ -38,6 +38,7 @@ namespace TasksApp.ApiSqlServer.Repositories
         public async Task InsertAsync(Models.Task task)
         {
             using var _context = new ApplicationDbContext();
+            task.Id = Guid.NewGuid().ToString();
             task.IsActive = true;
             task.CreatedAt = DateTime.Now;
             _context.Tasks.Add(task);
