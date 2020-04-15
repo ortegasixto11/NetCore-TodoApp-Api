@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TasksApp.ApiSqlServer.Data;
 using TasksApp.ApiSqlServer.Models;
+using TasksApp.ApiSqlServer.Repositories;
 
 namespace TasksApp.ApiSqlServer.Controllers
 {
@@ -14,25 +15,25 @@ namespace TasksApp.ApiSqlServer.Controllers
     [ApiController]
     public class TasksController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly TaskRepository _repo;
 
-        public TasksController(ApplicationDbContext context)
+        public TasksController()
         {
-            _context = context;
+            _repo = new TaskRepository();
         }
 
         // GET: api/Tasks
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Models.Task>>> GetTasks()
         {
-            return await _context.Tasks.ToListAsync();
+            return await _repo.GetAllAsync();
         }
 
         // GET: api/Tasks/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Models.Task>> GetTask(string id)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _repo.GetByIdAsync(id);
             if (task == null) return NotFound();
             return task;
         }
@@ -41,65 +42,41 @@ namespace TasksApp.ApiSqlServer.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTask(string id, Models.Task task)
         {
-            if (id != task.Id) return BadRequest();
-            _context.Entry(task).State = EntityState.Modified;
+            //if (id != task.Id) return BadRequest("");
             try
             {
-                await _context.SaveChangesAsync();
+                await _repo.UpdateAsync(task);
+                return Ok("");
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!TaskExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(500, ex.Message);
             }
-
-            return NoContent();
         }
 
         // POST: api/Tasks
         [HttpPost]
         public async Task<ActionResult<Models.Task>> PostTask(Models.Task task)
         {
-            _context.Tasks.Add(task);
             try
             {
-                await _context.SaveChangesAsync();
+                await _repo.InsertAsync(task);
+                return Ok("");
             }
-            catch (DbUpdateException)
+            catch (Exception ex)
             {
-                if (TaskExists(task.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(500, ex.Message);
             }
-
-            return CreatedAtAction("GetTask", new { id = task.Id }, task);
         }
 
         // DELETE: api/Tasks/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Models.Task>> DeleteTask(string id)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _repo.GetByIdAsync(id);
             if (task == null) return NotFound();
-            _context.Tasks.Remove(task);
-            await _context.SaveChangesAsync();
+            await _repo.DeleteByIdAsync(id);
             return task;
-        }
-
-        private bool TaskExists(string id)
-        {
-            return _context.Tasks.Any(e => e.Id == id);
         }
     }
 }
