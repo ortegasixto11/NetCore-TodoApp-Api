@@ -26,7 +26,7 @@ namespace TasksApp.ApiSqlServer.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Models.Task>>> GetTasks()
         {
-            return await _repo.GetAllAsync();
+            return Ok(new Helpers.ResponseApiHelper().Success<Models.Task>(await _repo.GetAllAsync()));
         }
 
         // GET: api/Tasks/5
@@ -58,14 +58,15 @@ namespace TasksApp.ApiSqlServer.Controllers
         [HttpPost]
         public async Task<ActionResult<Models.Task>> PostTask(Models.Task task)
         {
+            if (string.IsNullOrEmpty(task.Name)) return BadRequest(new Helpers.ResponseApiHelper().Error("Name is required"));
             try
             {
                 await _repo.InsertAsync(task);
-                return Ok("");
+                return Ok(new Helpers.ResponseApiHelper().Success("Task created"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new Helpers.ResponseApiHelper().Error(500, ex.Message));
             }
         }
 
