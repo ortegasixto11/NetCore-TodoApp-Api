@@ -2,3 +2,5 @@
 TasksApp/.vs/
 
 TasksApp/TasksApp.ApiSqlServer/obj/
+
+TasksApp/TasksApp.ApiSqlServer/bin/
