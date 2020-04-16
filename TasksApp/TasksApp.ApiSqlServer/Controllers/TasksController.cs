@@ -78,10 +78,18 @@ namespace TasksApp.ApiSqlServer.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Models.Task>> DeleteTask(string id)
         {
-            var task = await _repo.GetByIdAsync(id);
-            if (task == null) return NotFound();
-            await _repo.DeleteByIdAsync(id);
-            return task;
+            try
+            {
+                if (string.IsNullOrEmpty(id)) return BadRequest(new Helpers.ResponseApiHelper().Error("Id is required"));
+                var task = await _repo.GetByIdAsync(id);
+                if (task == null) return NotFound(new Helpers.ResponseApiHelper().Error(404, "The task does not exist"));
+                await _repo.DeleteByIdAsync(id);
+                return Ok(new Helpers.ResponseApiHelper().Success("Task deleted"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Helpers.ResponseApiHelper().Error(500, ex.Message));
+            }
         }
     }
 }
