@@ -28,6 +28,11 @@ namespace TasksApp.ApiSqlServer.Helpers
             return new ResponseApiModel<T> { StatusCode = 200, Error = false, Message = "", Data = data };
         }
 
+        public ResponseApiModel<T> Success<T>(T data)
+        {
+            return new ResponseApiModel<T> { StatusCode = 200, Error = false, Message = "", Data = new List<T> { data } };
+        }
+
 
 
     }

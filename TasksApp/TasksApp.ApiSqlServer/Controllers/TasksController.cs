@@ -34,23 +34,27 @@ namespace TasksApp.ApiSqlServer.Controllers
         public async Task<ActionResult<Models.Task>> GetTask(string id)
         {
             var task = await _repo.GetByIdAsync(id);
-            if (task == null) return NotFound();
-            return task;
+            if (task == null) return NotFound(new Helpers.ResponseApiHelper().Error(404, "The task does not exist"));
+            return Ok(new Helpers.ResponseApiHelper().Success<Models.Task>(task));
         }
 
         // PUT: api/Tasks/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTask(string id, Models.Task task)
         {
-            //if (id != task.Id) return BadRequest("");
             try
             {
-                await _repo.UpdateAsync(task);
-                return Ok("");
+                if(string.IsNullOrEmpty(id)) return BadRequest(new Helpers.ResponseApiHelper().Error("Id is required"));
+                var result = await _repo.GetByIdAsync(id);
+                if (result == null) return NotFound(new Helpers.ResponseApiHelper().Error(404, "The task does not exist"));
+                if (!string.IsNullOrEmpty(task.Name)) result.Name = task.Name;
+                result.IsActive = task.IsActive;
+                await _repo.UpdateAsync(result);
+                return Ok(new Helpers.ResponseApiHelper().Success("Task updated"));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new Helpers.ResponseApiHelper().Error(500, ex.Message));
             }
         }
 
